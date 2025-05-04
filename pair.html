@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PATRON-MD PAIRING</title>
+  <link rel="stylesheet" href="fontawesome/css/all.min.css">
+  <style>
+    /* Body and container styling */
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-image: url("https://files.catbox.moe/rgr9w9.jpg");
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: cover;
+      font-family: Arial, sans-serif;
+      transition: background-color 0.5s ease;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-color: rgba(255, 255, 255, 0.8);
+      padding: 5px;
+      border: 2px solid red;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      animation: fadeIn 1s ease-in;
+    }
+
+    .logo {
+      margin-bottom: 10px;
+      width: 60px;
+      height: auto;
+    }
+
+    /* Typing animation */
+    @keyframes typing {
+      from { width: 0; }
+      to { width: 100%; }
+    }
+
+    @keyframes blink {
+      50% { border-color: transparent; }
+    }
+
+    .header h1 {
+      display: inline-block;
+      overflow: hidden;
+      white-space: nowrap;
+      border-right: 3px solid;
+      width: 100%; /* Static width after animation */
+      color: blue;
+      font-size: 24px;
+      margin: 0;
+      animation: typing 3s steps(15, end), blink 0.5s step-end infinite;
+      animation-fill-mode: forwards; /* Keeps text after animation ends */
+    } 
+
+    .main {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
+
+    .main input, .main button {
+      margin-bottom: 15px;
+      border-radius: 20px;
+    }
+
+    .main input {
+      width: 80%;
+      max-width: 400px;
+      height: 40px;
+      text-align: center;
+    }
+
+    .main button {
+      width: 80%;
+      max-width: 400px;
+      height: 45px;
+      font-size: 18px;
+      cursor: pointer;
+      background-color: #D84444;
+      color: white;
+      border: none;
+    }
+
+    .main button:hover {
+      background-color: #086a45;
+    }
+
+    #copyb {
+      width: 80%;
+      max-width: 400px;
+      height: 40px;
+      font-size: 16px;
+      background-color: #1cb84e;
+      color: white;
+      cursor: pointer;
+    }
+
+    #copyb:hover {
+      background-color: #179640;
+    }
+
+    /* WhatsApp Channel Link */
+    .channel-link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 20px;
+      text-decoration: none;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      background-color: #25D366;
+      padding: 10px 20px;
+      border-radius: 20px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      transition: background-color 0.3s ease;
+    }
+
+    .channel-link:hover {
+      background-color: #1EB34B;
+    }
+
+    .channel-link img {
+      width: 24px;
+      height: 24px;
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Logo at the top -->
+    <img class="logo" src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="Logo">
+
+    <!-- Typing animation -->
+    <div class="header">
+      <h1>PATRON-MD PAIRING</h1>
+    </div>
+
+    <div class="main">
+      <form>
+        <input type="text" id="countryCode" placeholder="+Code">
+        <input type="text" id="number" placeholder="Phone number">
+        <button id="submit">Get Pair Code</button>
+        <main id="pair"></main>
+      </form>
+    </div>
+
+    <!-- WhatsApp Channel Link -->
+    <a href="https://whatsapp.com/channel/0029Val0s0rIt5rsIDPCoD2q" target="_blank" class="channel-link">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp Logo"> Join Our WhatsApp Channel
+    </a>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.0.0-alpha.1/axios.min.js"></script>
+  <script>
+    async function getCountryCode() {
+      try {
+        let { data } = await axios('https://ipapi.co/json/');
+        document.getElementById('countryCode').value = data.country_calling_code || '+1';
+      } catch (error) {
+        document.getElementById('countryCode').value = '+1'; // Default to +1
+      }
+    }
+
+    window.onload = getCountryCode;
+
+    let a = document.getElementById("pair");
+    let b = document.getElementById("submit");
+    let c = document.getElementById("number");
+    let cc = document.getElementById("countryCode");
+
+    let isSubmitting = false;
+    let isCodeDisplayed = false;
+
+    async function Copy() {
+      let codeElement = document.getElementById("copy");
+      let codeText = codeElement ? codeElement.innerText.replace('CODE: ', '') : '';
+      if (codeText) {
+        await navigator.clipboard.writeText(codeText);
+        codeElement.innerText = "COPIED";
+        codeElement.style.color = "blue";
+        setTimeout(() => {
+          codeElement.innerText = `CODE: ${codeText}`;
+          codeElement.style.color = "black";
+        }, 500);
+      }
+    }
+
+    b.addEventListener("click", async (e) => {
+      e.preventDefault();
+
+      if (isCodeDisplayed) {
+        alert("Please wait for 2 minutes before requesting a new code.");
+        return;
+      }
+
+      if (isSubmitting) {
+        alert("Please wait for the code before trying to request again.");
+        return;
+      }
+
+      if (!c.value) {
+        a.innerHTML = '<a style="color:black;font-weight:bold">Enter your phone number</a><br><br>';
+      } else if (c.value.replace(/[^0-9]/g, "").length < 7) {
+        a.innerHTML = '<a style="color:black;font-weight:bold">Invalid number format</a><br><br>';
+      } else {
+        isSubmitting = true;
+
+        const fullPhoneNumber = `${cc.value}${c.value.replace(/[^0-9]/g, "")}`;
+
+        try {
+          let { data } = await axios(`/pair?phone=${encodeURIComponent(fullPhoneNumber)}`);
+          let code = data.code || "Service Unavailable";
+          if (code !== "Service Unavailable") {
+            a.innerHTML = `<div><span id="copy" onclick="Copy()">CODE: ${code}</span></div><button id="copyb" onclick="Copy()">Copy Code</button>`;
+            isCodeDisplayed = true;
+            setTimeout(() => {
+              isCodeDisplayed = false;
+            }, 120000);
+          } else {
+            a.innerHTML = '<a style="color:red;font-weight:bold">Error: Service Unavailable. Please try again later.</a><br><br>';
+          }
+        } catch (error) {
+          a.innerHTML = '<a style="color:red;font-weight:bold">Error: Please try again later.</a><br><br>';
+        } finally {
+          isSubmitting = false;
+        }
+      }
+    });
+  </script>
+</body>
+</html>
