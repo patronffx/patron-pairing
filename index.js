@@ -21,7 +21,7 @@ async function createGist(content, filename = 'session.json') {
       'Authorization': `token ${GITHUB_TOKEN}`,
       'Accept': 'application/vnd.github+json',
       'User-Agent': 'session-uploader'
-    },
+    }, 
     body: JSON.stringify({
       description: 'PATRON-MD Session',
       public: false,
