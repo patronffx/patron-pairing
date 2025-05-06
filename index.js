@@ -11,7 +11,7 @@ import fetch from 'node-fetch';
 
 // GitHub Gist upload function
 async function createGist(content, filename = 'session.json') {
-  const GITHUB_TOKEN = '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';
+  const GITHUB_TOKEN = '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';
   const response = await fetch('https://api.github.com/gists', {
     method: 'POST',
     headers: {
