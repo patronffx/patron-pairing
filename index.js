@@ -12,7 +12,7 @@ import path, { dirname } from 'path';
 import pino from 'pino';
 import { fileURLToPath } from 'url';
 
-const pastebin = new PastebinAPI('feT-j1h-CC0we4sxqpXerB7__KaerXQv');
+const pastebin = new PastebinAPI('l3iUR_iaeRN-kvTNLKfPFDio39NuKZGF');
 const app = express();
 
 app.use((req, res, next) => {
@@ -147,9 +147,8 @@ console.log('Pastebin createPaste arguments:', {
 });
 let output, sessi;
 try {
-  // TEMP TEST: use simple content to isolate the error
   output = await pastebin.createPaste(
-    'test',
+    credsContent,
     'PATRON-MD',
     null,
     1,
