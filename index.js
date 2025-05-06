@@ -1,3 +1,5 @@
+import dotenv from 'dotenv';
+dotenv.config();
 import { Boom } from '@hapi/boom';
 import Baileys, {
   DisconnectReason,
@@ -11,7 +13,8 @@ import fetch from 'node-fetch';
 
 // GitHub Gist upload function
 async function createGist(content, filename = 'session.json') {
-  const GITHUB_TOKEN = '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';
+  const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+  if (!GITHUB_TOKEN) throw new Error('GITHUB_TOKEN not set in environment variables.');
   const response = await fetch('https://api.github.com/gists', {
     method: 'POST',
     headers: {
