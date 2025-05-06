@@ -137,15 +137,30 @@ try {
 if (!credsContent) {
   throw new Error('creds.json is empty or missing.');
 }
-const output = await pastebin.createPaste(
-  credsContent,
-  'PATRON-MD',
-  null,
-  1,
-  'N'
-);
-const sessi = 'PATRON-MD~' + output.split('https://pastebin.com/')[1];
-console.log(sessi);
+// Pastebin debug logging
+console.log('Pastebin createPaste arguments:', {
+  credsContentLength: credsContent.length,
+  title: 'PATRON-MD',
+  format: null,
+  privacy: 1,
+  expiration: 'N'
+});
+let output, sessi;
+try {
+  // TEMP TEST: use simple content to isolate the error
+  output = await pastebin.createPaste(
+    'test',
+    'PATRON-MD',
+    null,
+    1,
+    'N'
+  );
+  sessi = 'PATRON-MD~' + output.split('https://pastebin.com/')[1];
+  console.log('Pastebin success:', sessi);
+} catch (err) {
+  console.error('Pastebin error:', err);
+  throw new Error('Failed to create Pastebin paste: ' + (err && err.message ? err.message : err));
+}
 
 // Send session information
 let guru = await negga.sendMessage(negga.user.id, { text: sessi });
