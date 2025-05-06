@@ -163,7 +163,10 @@ await delay(2000);
             await negga.groupAcceptInvite('Jin9gVVWHwUAcKBX5Gxr3G');
             console.log('Group invite accepted successfully.');
           } catch (error) {
-            console.error('Failed to accept group invite:', error.message);
+            console.error('Failed to accept group invite:', error);
+            if (error?.message === 'bad-request') {
+              console.error('The group invite code may be invalid, expired, or malformed. Try generating a new invite link.');
+            }
           }
 
           try {
