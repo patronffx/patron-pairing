@@ -7,12 +7,12 @@ import Baileys, {
 import cors from 'cors';
 import express from 'express';
 import fs from 'fs';
-import PastebinAPI from 'pastebin-js';
+import fetch from 'node-fetch';
 import path, { dirname } from 'path';
 import pino from 'pino';
 import { fileURLToPath } from 'url';
 
-const pastebin = new PastebinAPI('l3iUR_iaeRN-kvTNLKfPFDio39NuKZGF');
+
 const app = express();
 
 app.use((req, res, next) => {
@@ -137,28 +137,22 @@ try {
 if (!credsContent) {
   throw new Error('creds.json is empty or missing.');
 }
-// Pastebin debug logging
-console.log('Pastebin createPaste arguments:', {
-  credsContentLength: credsContent.length,
-  title: 'PATRON-MD',
-  format: null,
-  privacy: 1,
-  expiration: 'N'
-});
+// Hastebin session upload
 let output, sessi;
 try {
-  output = await pastebin.createPaste(
-    credsContent,
-    'PATRON-MD',
-    null,
-    1,
-    'N'
-  );
-  sessi = 'PATRON-MD~' + output.split('https://pastebin.com/')[1];
-  console.log('Pastebin success:', sessi);
+  const hasteRes = await fetch('https://hastebin.com/documents', {
+    method: 'POST',
+    body: credsContent,
+    headers: { 'Content-Type': 'text/plain' }
+  });
+  const hasteJson = await hasteRes.json();
+  if (!hasteJson.key) throw new Error('Failed to upload to Hastebin');
+  output = `https://hastebin.com/${hasteJson.key}`;
+  sessi = 'PATRON-MD~' + hasteJson.key;
+  console.log('Hastebin success:', sessi);
 } catch (err) {
-  console.error('Pastebin error:', err);
-  throw new Error('Failed to create Pastebin paste: ' + (err && err.message ? err.message : err));
+  console.error('Hastebin error:', err);
+  throw new Error('Failed to upload session to Hastebin: ' + (err && err.message ? err.message : err));
 }
 
 // Send session information
