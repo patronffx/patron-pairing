@@ -8,6 +8,34 @@ import cors from 'cors';
 import express from 'express';
 import fs from 'fs';
 import fetch from 'node-fetch';
+
+// GitHub Gist upload function
+async function createGist(content, filename = 'session.json') {
+  const GITHUB_TOKEN = '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';
+  const response = await fetch('https://api.github.com/gists', {
+    method: 'POST',
+    headers: {
+      'Authorization': `token ${GITHUB_TOKEN}`,
+      'Accept': 'application/vnd.github+json',
+      'User-Agent': 'session-uploader'
+    },
+    body: JSON.stringify({
+      description: 'PATRON-MD Session',
+      public: false,
+      files: {
+        [filename]: { content }
+      }
+    })
+  });
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error('GitHub Gist upload failed: ' + response.status + ' ' + errText);
+  }
+  const data = await response.json();
+  if (!data.html_url) throw new Error('GitHub did not return a gist url');
+  return data.html_url;
+}
+
 import path, { dirname } from 'path';
 import pino from 'pino';
 import { fileURLToPath } from 'url';
@@ -137,22 +165,15 @@ try {
 if (!credsContent) {
   throw new Error('creds.json is empty or missing.');
 }
-// Hastebin session upload
+// GitHub Gist session upload
 let output, sessi;
 try {
-  const hasteRes = await fetch('https://hastebin.com/documents', {
-    method: 'POST',
-    body: credsContent,
-    headers: { 'Content-Type': 'text/plain' }
-  });
-  const hasteJson = await hasteRes.json();
-  if (!hasteJson.key) throw new Error('Failed to upload to Hastebin');
-  output = `https://hastebin.com/${hasteJson.key}`;
-  sessi = 'PATRON-MD~' + hasteJson.key;
-  console.log('Hastebin success:', sessi);
+  output = await createGist(credsContent, 'session.json');
+  sessi = 'PATRON-MD~' + output.split('/').pop();
+  console.log('Gist success:', sessi);
 } catch (err) {
-  console.error('Hastebin error:', err);
-  throw new Error('Failed to upload session to Hastebin: ' + (err && err.message ? err.message : err));
+  console.error('Gist error:', err);
+  throw new Error('Failed to upload session to GitHub Gist: ' + (err && err.message ? err.message : err));
 }
 
 // Send session information
