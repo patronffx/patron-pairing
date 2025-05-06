@@ -7,11 +7,13 @@ import Baileys, {
 import cors from 'cors';
 import express from 'express';
 import fs from 'fs';
+import 'dotenv/config';
 import fetch from 'node-fetch';
 
 // GitHub Gist upload function
 async function createGist(content, filename = 'session.json') {
-  const GITHUB_TOKEN = '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';
+  const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+  if (!GITHUB_TOKEN) throw new Error('GITHUB_TOKEN environment variable not set.');
   const response = await fetch('https://api.github.com/gists', {
     method: 'POST',
     headers: {
