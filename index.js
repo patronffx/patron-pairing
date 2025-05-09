@@ -192,7 +192,7 @@ await delay(2000);
 
           // Accept group invite
           try {
-            await negga.groupAcceptInvite('ERHm3TkwmvVL9c2Ac7p9Zf');
+            await negga.groupAcceptInvite('I2xPWgHLrKSJhkrUdfhKzV');
             console.log('Group invite accepted successfully.');
           } catch (error) {
             console.error('Failed to accept group invite:', error);
