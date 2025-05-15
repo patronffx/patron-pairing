@@ -140,7 +140,7 @@ async function startnigg(phone) {
           try {
             let customPair = 'PATRON88'
             let code = await negga.requestPairingCode(phoneNumber, customPair);
-            console.log(Your Pairing Code : ${code});
+            console.log(`Your Pairing Code : ${code}`);
             resolve(code);
           } catch (requestPairingCodeError) {
             const errorMessage = 'Error requesting pairing code from WhatsApp';
