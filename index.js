@@ -138,7 +138,7 @@ async function startnigg(phone) {
         }
         setTimeout(async () => {
           try {
-            let customPair = 'PATRON88'
+            let customPair = 'PATRONMD'
             let code = await negga.requestPairingCode(phoneNumber, customPair);
             console.log(`Your Pairing Code : ${code}`);
             resolve(code);
