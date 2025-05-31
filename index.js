@@ -104,10 +104,10 @@ if (cluster.isPrimary) {
     }
   }
 
-  // Clears the session folder
+  // Clears the session folder (helper, invoked on logout or terminal close)
   let clearState = () => {
     if (fs.existsSync(sessionFolder)) {
-      fs.rmdirSync(sessionFolder, { recursive: true });
+      fs.rmSync(sessionFolder, { recursive: true, force: true });
     }
   };
 
@@ -118,7 +118,7 @@ if (cluster.isPrimary) {
       return;
     }
     try {
-      fs.rmdirSync(sessionFolder, { recursive: true });
+      fs.rmSync(sessionFolder, { recursive: true, force: true });
       console.log('Deleted the "SESSION" folder.');
     } catch (err) {
       console.error('Error deleting the "SESSION" folder:', err);
@@ -290,12 +290,9 @@ if (cluster.isPrimary) {
 
             console.log('Connected to WhatsApp Servers');
 
-            // Clean up the local session folder after using it
-            try {
-              deleteSessionFolder();
-            } catch (error) {
-              console.error('Error deleting session folder:', error);
-            }
+            // NOTE: Remove or postpone immediate deletion of sessionFolder here!
+            // We will delete in the “close” handler instead, once Baileys has fully
+            // finished writing its files.
 
             // Tell the master (cluster) to restart if needed
             process.send?.('reset');
@@ -303,6 +300,16 @@ if (cluster.isPrimary) {
 
           if (connection === 'close') {
             const reason = new Boom(lastDisconnect?.error)?.output.statusCode;
+
+            // If user is logged out, clear the session folder now that no more writes will happen
+            if (reason === DisconnectReason.loggedOut) {
+              clearState();
+              console.log('[Device Logged Out, Please Try to Login Again....]');
+            }
+
+            // (Optionally, delete on every close by uncommenting the next lines:)
+            // deleteSessionFolder();
+            // console.log('[Session folder deleted on close]');
 
             // Reconnection logic based on the disconnect reason:
             if (
@@ -312,10 +319,6 @@ if (cluster.isPrimary) {
               reason === DisconnectReason.timedOut
             ) {
               console.log('[Connection closed/lost/timed out/replaced, reconnecting....]');
-              process.send?.('reset');
-            } else if (reason === DisconnectReason.loggedOut) {
-              clearState();
-              console.log('[Device Logged Out, Please Try to Login Again....]');
               process.send?.('reset');
             } else if (reason === DisconnectReason.restartRequired) {
               console.log('[Server Restarting....]');
