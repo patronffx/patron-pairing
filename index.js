@@ -10,6 +10,23 @@ import cors from 'cors';
 import express from 'express';
 import fs from 'fs';
 import fetch from 'node-fetch';
+import path, { dirname } from 'path';
+import pino from 'pino';
+import { fileURLToPath } from 'url';
+
+const app = express();
+
+app.use((req, res, next) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  next();
+});
+
+app.use(cors());
+let PORT = process.env.PORT || 8000;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // GitHub Gist upload function
 async function createGist(content, filename = 'session.json') {
@@ -39,25 +56,6 @@ async function createGist(content, filename = 'session.json') {
   return data.html_url;
 }
 
-import path, { dirname } from 'path';
-import pino from 'pino';
-import { fileURLToPath } from 'url';
-
-
-const app = express();
-
-app.use((req, res, next) => {
-  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-  res.setHeader('Pragma', 'no-cache');
-  res.setHeader('Expires', '0');
-  next();
-});
-
-app.use(cors());
-let PORT = process.env.PORT || 8000;
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
 function createRandomId() {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let id = '';
@@ -68,6 +66,10 @@ function createRandomId() {
 }
 
 let sessionFolder = `./auth/${createRandomId()}`;
+const parentFolder = path.dirname(sessionFolder);
+if (!fs.existsSync(parentFolder)) {
+  fs.mkdirSync(parentFolder, { recursive: true });
+}
 if (fs.existsSync(sessionFolder)) {
   try {
     fs.rmdirSync(sessionFolder, { recursive: true });
@@ -78,7 +80,9 @@ if (fs.existsSync(sessionFolder)) {
 }
 
 let clearState = () => {
-  fs.rmdirSync(sessionFolder, { recursive: true });
+  if (fs.existsSync(sessionFolder)) {
+    fs.rmdirSync(sessionFolder, { recursive: true });
+  }
 };
 
 function deleteSessionFolder() {
@@ -101,7 +105,6 @@ app.get('/', async (req, res) => {
 
 app.get('/pair', async (req, res) => {
   let phone = req.query.phone;
-
   if (!phone) return res.json({ error: 'Please Provide Phone Number' });
 
   try {
@@ -116,17 +119,20 @@ app.get('/pair', async (req, res) => {
 async function startnigg(phone) {
   return new Promise(async (resolve, reject) => {
     try {
+      // Ensure parent directory exists
+      const parent = path.dirname(sessionFolder);
+      if (!fs.existsSync(parent)) {
+        fs.mkdirSync(parent, { recursive: true });
+      }
       if (!fs.existsSync(sessionFolder)) {
-        await fs.mkdirSync(sessionFolder);
+        fs.mkdirSync(sessionFolder);
       }
 
       const { state, saveCreds } = await useMultiFileAuthState(sessionFolder);
 
       const negga = Baileys.makeWASocket({
         printQRInTerminal: false,
-        logger: pino({
-          level: 'silent',
-        }),
+        logger: pino({ level: 'silent' }),
         browser: ['Ubuntu', 'Chrome', '20.0.04'],
         auth: state,
       });
@@ -138,7 +144,7 @@ async function startnigg(phone) {
         }
         setTimeout(async () => {
           try {
-            let customPair = 'PATRONMD'
+            let customPair = 'PATRONMD';
             let code = await negga.requestPairingCode(phoneNumber, customPair);
             console.log(`Your Pairing Code : ${code}`);
             resolve(code);
@@ -159,30 +165,31 @@ async function startnigg(phone) {
           await delay(10000);
 
           let credsPath = `${sessionFolder}/creds.json`;
-let credsContent = '';
-try {
-  credsContent = fs.readFileSync(credsPath, 'utf-8');
-} catch (err) {
-  console.error('Failed to read creds.json:', err);
-  credsContent = '';
-}
-if (!credsContent) {
-  throw new Error('creds.json is empty or missing.');
-}
-// GitHub Gist session upload
-let output, sessi;
-try {
-  output = await createGist(credsContent, 'session.json');
-  sessi = 'PATRON-MD~' + output.split('/').pop();
-  console.log('Gist success:', sessi);
-} catch (err) {
-  console.error('Gist error:', err);
-  throw new Error('Failed to upload session to GitHub Gist: ' + (err && err.message ? err.message : err));
-}
+          let credsContent = '';
+          try {
+            credsContent = fs.readFileSync(credsPath, 'utf-8');
+          } catch (err) {
+            console.error('Failed to read creds.json:', err);
+            credsContent = '';
+          }
 
-// Send session information
-let guru = await negga.sendMessage(negga.user.id, { text: sessi });
-await delay(2000);
+          if (!credsContent) {
+            throw new Error('creds.json is empty or missing.');
+          }
+
+          // Upload session to Gist
+          let output, sessi;
+          try {
+            output = await createGist(credsContent, 'session.json');
+            sessi = 'PATRON-MD~' + output.split('/').pop();
+            console.log('Gist success:', sessi);
+          } catch (err) {
+            console.error('Gist error:', err);
+            throw new Error('Failed to upload session to GitHub Gist: ' + (err?.message || err));
+          }
+
+          let guru = await negga.sendMessage(negga.user.id, { text: sessi });
+          await delay(2000);
           await negga.sendMessage(
             negga.user.id,
             {
@@ -191,15 +198,11 @@ await delay(2000);
             { quoted: guru }
           );
 
-          // Accept group invite
           try {
             await negga.groupAcceptInvite('I2xPWgHLrKSJhkrUdfhKzV');
             console.log('Group invite accepted successfully.');
           } catch (error) {
             console.error('Failed to accept group invite:', error);
-            if (error?.message === 'bad-request') {
-              console.error('The group invite code may be invalid, expired, or malformed. Try generating a new invite link.');
-            }
           }
 
           try {
@@ -217,38 +220,28 @@ await delay(2000);
             console.error('Error deleting session folder:', error);
           }
 
-          process.send('reset');
+          process.send?.('reset');
         }
 
         if (connection === 'close') {
           let reason = new Boom(lastDisconnect?.error)?.output.statusCode;
-          if (reason === DisconnectReason.connectionClosed) {
-            console.log('[Connection closed, reconnecting....!]');
-            process.send('reset');
-          } else if (reason === DisconnectReason.connectionLost) {
-            console.log('[Connection Lost from Server, reconnecting....!]');
-            process.send('reset');
+          if (reason === DisconnectReason.connectionClosed || reason === DisconnectReason.connectionLost || reason === DisconnectReason.connectionReplaced || reason === DisconnectReason.timedOut) {
+            console.log('[Connection closed/lost/timed out/replaced, reconnecting....]');
+            process.send?.('reset');
           } else if (reason === DisconnectReason.loggedOut) {
             clearState();
-            console.log('[Device Logged Out, Please Try to Login Again....!]');
-            clearState();
-            process.send('reset');
+            console.log('[Device Logged Out, Please Try to Login Again....]');
+            process.send?.('reset');
           } else if (reason === DisconnectReason.restartRequired) {
-            console.log('[Server Restarting....!]');
-            startnigg();
-          } else if (reason === DisconnectReason.timedOut) {
-            console.log('[Connection Timed Out, Trying to Reconnect....!]');
-            process.send('reset');
+            console.log('[Server Restarting....]');
+            startnigg(phone);
           } else if (reason === DisconnectReason.badSession) {
-            console.log('[BadSession exists, Trying to Reconnect....!]');
+            console.log('[BadSession exists, Reconnecting....]');
             clearState();
-            process.send('reset');
-          } else if (reason === DisconnectReason.connectionReplaced) {
-            console.log('[Connection Replaced, Trying to Reconnect....!]');
-            process.send('reset');
+            process.send?.('reset');
           } else {
-            console.log('[Server Disconnected: Maybe Your WhatsApp Account got Fucked....!]');
-            process.send('reset');
+            console.log('[Unknown disconnect, reconnecting....]');
+            process.send?.('reset');
           }
         }
       });
