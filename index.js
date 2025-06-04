@@ -5,7 +5,7 @@ import Baileys, {
   DisconnectReason,
   delay,
   useMultiFileAuthState
-} from '@whiskeysockets/baileys';
+} from 'baileys';
 import cors from 'cors';
 import express from 'express';
 import fs from 'fs';
