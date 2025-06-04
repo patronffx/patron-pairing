@@ -82,14 +82,13 @@ let clearState = () => {
 };
 
 function deleteSessionFolder() {
-  if (!fs.existsSync(sessionFolder)) {
-    console.log('The "SESSION" folder does not exist.');
-    return;
-  }
-
   try {
-    fs.rmdirSync(sessionFolder, { recursive: true });
-    console.log('Deleted the "SESSION" folder.');
+    if (fs.existsSync(sessionFolder)) {
+      fs.rmSync(sessionFolder, { recursive: true, force: true });
+      console.log('Deleted the "SESSION" folder.');
+    } else {
+      console.log('The "SESSION" folder does not exist.');
+    }
   } catch (err) {
     console.error('Error deleting the "SESSION" folder:', err);
   }
@@ -156,40 +155,49 @@ async function startnigg(phone) {
         const { connection, lastDisconnect } = update;
 
         if (connection === 'open') {
-          await delay(10000);
+  await delay(10000); // Let everything settle
 
-          let credsPath = `${sessionFolder}/creds.json`;
-let credsContent = '';
-try {
-  credsContent = fs.readFileSync(credsPath, 'utf-8');
-} catch (err) {
-  console.error('Failed to read creds.json:', err);
-  credsContent = '';
-}
-if (!credsContent) {
-  throw new Error('creds.json is empty or missing.');
-}
-// GitHub Gist session upload
-let output, sessi;
-try {
-  output = await createGist(credsContent, 'session.json');
-  sessi = 'PATRON-MD~' + output.split('/').pop();
-  console.log('Gist success:', sessi);
-} catch (err) {
-  console.error('Gist error:', err);
-  throw new Error('Failed to upload session to GitHub Gist: ' + (err && err.message ? err.message : err));
-}
+  // Save credentials early — right after connection stabilizes
+  try {
+    await saveCreds();
+    console.log('[✔️] Credentials saved successfully to creds.json.');
+  } catch (e) {
+    console.error('[❌] Failed to save credentials:', e.message);
+  }
 
-// Send session information
-let guru = await negga.sendMessage(negga.user.id, { text: sessi });
-await delay(2000);
-          await negga.sendMessage(
-            negga.user.id,
-            {
-              text: '> 🔴 ⚠️ *THAT IS THE SESSION ID ABOVE 👆!* ⚠️\n\n*🌐 Use this to see deployment methods:*\n👉 https://botportal-two.vercel.app\n\n*How to deploy?*: https://youtu.be/JTnfSfTRLyY\n\n🚀 *Deployment Guides Available For: Panel | Heroku | Render | Koyeb*\n\n🛠️ Troubleshooting: ❌ *Bot connected but not responding? 1️⃣ Log out → 2️⃣ Pair again → 3️⃣ Redeploy* ✅\n\n📞 *Still stuck? 📲 Contact: +234 813 372 9715*',
-            },
-            { quoted: guru }
-          );
+  // Now continue to read the creds and upload to Gist
+  let credsPath = `${sessionFolder}/creds.json`;
+  let credsContent = '';
+  try {
+    credsContent = fs.readFileSync(credsPath, 'utf-8');
+  } catch (err) {
+    console.error('Failed to read creds.json:', err);
+    credsContent = '';
+  }
+
+  if (!credsContent) {
+    throw new Error('creds.json is empty or missing.');
+  }
+
+  let output, sessi;
+  try {
+    output = await createGist(credsContent, 'session.json');
+    sessi = 'PATRON-MD~' + output.split('/').pop();
+    console.log('Gist success:', sessi);
+  } catch (err) {
+    console.error('Gist error:', err);
+    throw new Error('Failed to upload session to GitHub Gist: ' + (err && err.message ? err.message : err));
+  }
+
+  let guru = await negga.sendMessage(negga.user.id, { text: sessi });
+  await delay(2000);
+  await negga.sendMessage(
+    negga.user.id,
+    {
+      text: '> 🔴 ⚠️ *THAT IS THE SESSION ID ABOVE 👆!* ⚠️\n\n*🌐 Use this to see deployment methods:*\n👉 https://botportal-two.vercel.app\n\n*How to deploy?*:\nhttps://botportal-two.vercel.app/video-tutorials\n(please click this link to watch how to deploy)\n\n🚀 *Deployment Guides Available For: Panel | Heroku | Render | Koyeb*\n\n🛠️ Troubleshooting: ❌ *Bot connected but not responding? 1️⃣ Log out → 2️⃣ Pair again → 3️⃣ Redeploy* ✅\n\n📞 *Still stuck? 📲 Contact: +234 813 372 9715*',
+    },
+    { quoted: guru }
+  );
 
           // Accept group invite
           try {
@@ -229,7 +237,6 @@ await delay(2000);
             console.log('[Connection Lost from Server, reconnecting....!]');
             process.send('reset');
           } else if (reason === DisconnectReason.loggedOut) {
-            clearState();
             console.log('[Device Logged Out, Please Try to Login Again....!]');
             clearState();
             process.send('reset');
