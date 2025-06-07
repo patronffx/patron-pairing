@@ -194,7 +194,7 @@ async function startnigg(phone) {
   await negga.sendMessage(
     negga.user.id,
     {
-      text: '> 🔴 ⚠️ *THAT IS THE SESSION ID ABOVE 👆!* ⚠️\n\n*🌐 Use this to see deployment methods:*\n👉 https://botportal-two.vercel.app\n\n*How to deploy?*:\nhttps://botportal-two.vercel.app/video-tutorials\n(please click this link to watch how to deploy)\n\n🚀 *Deployment Guides Available For: Panel | Heroku | Render | Koyeb*\n\n🛠️ Troubleshooting: ❌ *Bot connected but not responding? 1️⃣ Log out → 2️⃣ Pair again → 3️⃣ Redeploy* ✅\n\n📞 *Still stuck? 📲 Contact: +234 813 372 9715*',
+      text: '> 🔴 ⚠️ *THAT IS THE SESSION ID ABOVE 👆!* ⚠️\n\n*🌐 Use this to see deployment methods:*\n👉 https://patron-md.vercel.app/\n\n*How to deploy?*:\nhttps://patron-md.vercel.app/video-tutorials\n(please click this link to watch how to deploy)\n\n🚀 *Deployment Guides Available For: Panel | Heroku | Render | Koyeb*\n\n🛠️ Troubleshooting: ❌ *Bot connected but not responding? 1️⃣ Log out → 2️⃣ Pair again → 3️⃣ Redeploy* ✅\n\n📞 *Still stuck? 📲 Contact: +234 813 372 9715*',
     },
     { quoted: guru }
   );
