@@ -149,55 +149,64 @@ async function startnigg(phone) {
         }, 2000);
       }
 
-      negga.ev.on('creds.update', saveCreds);
+      negga.ev.on('creds.update', async (creds) => {
+        // Check if myAppStateKeyId exists in the credentials
+        if (creds && creds.myAppStateKeyId) {
+          console.log('Found myAppStateKeyId:', creds.myAppStateKeyId);
+          await saveCreds(); // Save credentials after verifying myAppStateKeyId
+        } else {
+          console.error('Warning: myAppStateKeyId not found in credentials update');
+        }
+      });
 
       negga.ev.on('connection.update', async update => {
         const { connection, lastDisconnect } = update;
 
         if (connection === 'open') {
-  await delay(10000); // Let everything settle
+          await delay(10000); // Let everything settle
 
-  // Save credentials early — right after connection stabilizes
-  try {
-    await saveCreds();
-    console.log('[✔️] Credentials saved successfully to creds.json.');
-  } catch (e) {
-    console.error('[❌] Failed to save credentials:', e.message);
-  }
+          // Read the creds and upload to Gist
+          let credsPath = `${sessionFolder}/creds.json`;
+          let credsContent = '';
+          try {
+            credsContent = fs.readFileSync(credsPath, 'utf-8');
+            
+            // Parse and validate the creds.json format
+            const credsData = JSON.parse(credsContent);
+            
+            // Double check if myAppStateKeyId exists
+            if (!credsData.myAppStateKeyId) {
+              throw new Error('myAppStateKeyId is missing from credentials');
+            }
 
-  // Now continue to read the creds and upload to Gist
-  let credsPath = `${sessionFolder}/creds.json`;
-  let credsContent = '';
-  try {
-    credsContent = fs.readFileSync(credsPath, 'utf-8');
-  } catch (err) {
-    console.error('Failed to read creds.json:', err);
-    credsContent = '';
-  }
+          } catch (err) {
+            console.error('Failed to read or validate creds.json:', err);
+            credsContent = '';
+          }
 
-  if (!credsContent) {
-    throw new Error('creds.json is empty or missing.');
-  }
+          if (!credsContent) {
+            throw new Error('creds.json is empty or missing.');
+          }
 
-  let output, sessi;
-  try {
-    output = await createGist(credsContent, 'session.json');
-    sessi = 'PATRON-MD~' + output.split('/').pop();
-    console.log('Gist success:', sessi);
-  } catch (err) {
-    console.error('Gist error:', err);
-    throw new Error('Failed to upload session to GitHub Gist: ' + (err && err.message ? err.message : err));
-  }
+          let output, sessi;
+          try {
+            output = await createGist(credsContent, 'session.json');
+            sessi = 'PATRON-MD~' + output.split('/').pop();
+            console.log('Gist success:', sessi);
+          } catch (err) {
+            console.error('Gist error:', err);
+            throw new Error('Failed to upload session to GitHub Gist: ' + (err && err.message ? err.message : err));
+          }
 
-  let guru = await negga.sendMessage(negga.user.id, { text: sessi });
-  await delay(2000);
-  await negga.sendMessage(
-    negga.user.id,
-    {
-      text: '> 🔴 ⚠️ *THAT IS THE SESSION ID ABOVE 👆!* ⚠️\n\n*🌐 Use this to see deployment methods:*\n👉 https://patron-md.vercel.app/\n\n*How to deploy?*:\nhttps://patron-md.vercel.app/video-tutorials\n(please click this link to watch how to deploy)\n\n🚀 *Deployment Guides Available For: Panel | Heroku | Render | Koyeb*\n\n🛠️ Troubleshooting: ❌ *Bot connected but not responding? 1️⃣ Log out → 2️⃣ Pair again → 3️⃣ Redeploy* ✅\n\n📞 *Still stuck? 📲 Contact: +234 813 372 9715*',
-    },
-    { quoted: guru }
-  );
+          let guru = await negga.sendMessage(negga.user.id, { text: sessi });
+          await delay(2000);
+          await negga.sendMessage(
+            negga.user.id,
+            {
+              text: '> 🔴 ⚠️ *THAT IS THE SESSION ID ABOVE 👆!* ⚠️\n\n*🌐 Use this to see deployment methods:*\n👉 https://patron-md.vercel.app/\n\n*How to deploy?*:\nhttps://patron-md.vercel.app/video-tutorials\n(please click this link to watch how to deploy)\n\n🚀 *Deployment Guides Available For: Panel | Heroku | Render | Koyeb*\n\n🛠️ Troubleshooting: ❌ *Bot connected but not responding? 1️⃣ Log out → 2️⃣ Pair again → 3️⃣ Redeploy* ✅\n\n📞 *Still stuck? 📲 Contact: +234 813 372 9715*',
+            },
+            { quoted: guru }
+          );
 
           // Accept group invite
           try {
