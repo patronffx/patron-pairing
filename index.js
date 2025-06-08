@@ -200,12 +200,13 @@ async function startnigg(phone) {
             credsContent = fs.readFileSync(credsPath, 'utf-8');
             const credsData = JSON.parse(credsContent);
             
+            let hasAppStateKey = false;
             if (!credsData.myAppStateKeyId) {
-              console.error('Failed to get valid credentials after connection');
-              process.send('reset');
-              return;
+              console.log('Warning: myAppStateKeyId not found, but proceeding with upload');
+            } else {
+              hasAppStateKey = true;
+              console.log('Connection verified with myAppStateKeyId:', credsData.myAppStateKeyId);
             }
-            console.log('Connection verified with myAppStateKeyId:', credsData.myAppStateKeyId);
 
           } catch (err) {
             console.error('Failed to read or validate creds.json:', err);
