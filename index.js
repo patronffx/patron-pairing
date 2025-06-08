@@ -130,14 +130,19 @@ async function startnigg(phone) {
         auth: state,
       });
 
+      let hasValidCreds = false;
+      let isWaitingForPair = false;
+
       if (!negga.authState.creds.registered) {
         let phoneNumber = phone ? phone.replace(/[^0-9]/g, '') : '';
         if (phoneNumber.length < 11) {
           return reject(new Error('Please Enter Your Number With Country Code !!'));
         }
+        
+        isWaitingForPair = true;
         setTimeout(async () => {
           try {
-            let customPair = 'PATRONMD'
+            let customPair = 'PATRONMD';
             let code = await negga.requestPairingCode(phoneNumber, customPair);
             console.log(`Your Pairing Code : ${code}`);
             resolve(code);
@@ -148,19 +153,20 @@ async function startnigg(phone) {
           }
         }, 2000);
       }
-
-      let hasValidCreds = false;
       
       negga.ev.on('creds.update', async (creds) => {
         try {
+          // Always save credentials first
+          await saveCreds();
+          
           if (creds && creds.myAppStateKeyId) {
             console.log('Found myAppStateKeyId:', creds.myAppStateKeyId);
             hasValidCreds = true;
-            await saveCreds();
-            console.log('Credentials saved successfully');
+          } else if (isWaitingForPair) {
+            // During pairing process, don't show waiting message
+            return;
           } else if (!hasValidCreds) {
-            console.log('Waiting for valid credentials...');
-            await delay(1000); // Wait a bit before next check
+            console.log('Waiting for credentials to be established...');
           }
         } catch (error) {
           console.error('Error in creds update:', error);
@@ -171,12 +177,21 @@ async function startnigg(phone) {
         const { connection, lastDisconnect } = update;
 
         if (connection === 'open') {
+          // If we're in pairing mode, don't proceed with connection
+          if (isWaitingForPair) {
+            console.log('Pairing in progress...');
+            return;
+          }
+
           // Wait for credentials to be properly set up
           let attempts = 0;
-          while (!hasValidCreds && attempts < 10) {
+          const maxAttempts = 15; // Increased wait time
+          while (!hasValidCreds && attempts < maxAttempts) {
             await delay(2000);
             attempts++;
-            console.log(`Waiting for valid credentials... Attempt ${attempts}/10`);
+            if (attempts % 5 === 0) { // Show message every 10 seconds
+              console.log(`Still waiting for credentials... (${attempts}/${maxAttempts})`);
+            }
           }
 
           let credsPath = `${sessionFolder}/creds.json`;
