@@ -149,13 +149,21 @@ async function startnigg(phone) {
         }, 2000);
       }
 
+      let hasValidCreds = false;
+      
       negga.ev.on('creds.update', async (creds) => {
-        // Check if myAppStateKeyId exists in the credentials
-        if (creds && creds.myAppStateKeyId) {
-          console.log('Found myAppStateKeyId:', creds.myAppStateKeyId);
-          await saveCreds(); // Save credentials after verifying myAppStateKeyId
-        } else {
-          console.error('Warning: myAppStateKeyId not found in credentials update');
+        try {
+          if (creds && creds.myAppStateKeyId) {
+            console.log('Found myAppStateKeyId:', creds.myAppStateKeyId);
+            hasValidCreds = true;
+            await saveCreds();
+            console.log('Credentials saved successfully');
+          } else if (!hasValidCreds) {
+            console.log('Waiting for valid credentials...');
+            await delay(1000); // Wait a bit before next check
+          }
+        } catch (error) {
+          console.error('Error in creds update:', error);
         }
       });
 
@@ -163,21 +171,26 @@ async function startnigg(phone) {
         const { connection, lastDisconnect } = update;
 
         if (connection === 'open') {
-          await delay(10000); // Let everything settle
+          // Wait for credentials to be properly set up
+          let attempts = 0;
+          while (!hasValidCreds && attempts < 10) {
+            await delay(2000);
+            attempts++;
+            console.log(`Waiting for valid credentials... Attempt ${attempts}/10`);
+          }
 
-          // Read the creds and upload to Gist
           let credsPath = `${sessionFolder}/creds.json`;
           let credsContent = '';
           try {
             credsContent = fs.readFileSync(credsPath, 'utf-8');
-            
-            // Parse and validate the creds.json format
             const credsData = JSON.parse(credsContent);
             
-            // Double check if myAppStateKeyId exists
             if (!credsData.myAppStateKeyId) {
-              throw new Error('myAppStateKeyId is missing from credentials');
+              console.error('Failed to get valid credentials after connection');
+              process.send('reset');
+              return;
             }
+            console.log('Connection verified with myAppStateKeyId:', credsData.myAppStateKeyId);
 
           } catch (err) {
             console.error('Failed to read or validate creds.json:', err);
