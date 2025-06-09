@@ -185,11 +185,11 @@ async function startnigg(phone) {
 
           // Wait for credentials to be properly set up
           let attempts = 0;
-          const maxAttempts = 15; // Increased wait time
+          const maxAttempts = 30; // Extended wait time for myAppStateKeyId
           while (!hasValidCreds && attempts < maxAttempts) {
-            await delay(2000);
+            await delay(3000); // Increased delay between attempts
             attempts++;
-            if (attempts % 5 === 0) { // Show message every 10 seconds
+            if (attempts % 5 === 0) { // Show message every 15 seconds
               console.log(`Still waiting for credentials... (${attempts}/${maxAttempts})`);
             }
           }
