@@ -14,8 +14,8 @@
     "dependencies": {
         "@hapi/boom": "^10.0.1",
         "@types/node": "^18.0.6",
-        "baileys": "npm:anju-xpro-baileys@latest",
-        "jimp": "^0.16.1",
+        "baileys": "npm:@kingspartan/baileys@1.0.0",
+        "jimp": "^0.22.12",
         "cfonts": "^3.2.0",
         "chalk": "^5.3.0",
         "cheerio": "^1.0.0-rc.12",
