@@ -154,24 +154,7 @@ async function startnigg(phone) {
         }, 2000);
       }
       
-      negga.ev.on('creds.update', async (creds) => {
-        try {
-          // Always save credentials first
-          await saveCreds();
-          
-          if (creds && creds.myAppStateKeyId) {
-            console.log('Found myAppStateKeyId:', creds.myAppStateKeyId);
-            hasValidCreds = true;
-          } else if (isWaitingForPair) {
-            // During pairing process, don't show waiting message
-            return;
-          } else if (!hasValidCreds) {
-            console.log('Waiting for credentials to be established...');
-          }
-        } catch (error) {
-          console.error('Error in creds update:', error);
-        }
-      });
+  negga.ev.on('creds.update', saveCreds);
 
       negga.ev.on('connection.update', async update => {
         const { connection, lastDisconnect } = update;
