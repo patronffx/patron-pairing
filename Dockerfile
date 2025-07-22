@@ -1,11 +1,13 @@
 FROM node:lts-buster
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 RUN apt-get update && \
-  apt-get install -y \
-  ffmpeg \
-  imagemagick \
-  webp && \
-  apt-get upgrade -y && \
+  apt-get install -y --no-install-recommends \
+    ffmpeg \
+    imagemagick \
+    libwebp-dev && \
+  apt-get clean && \
   rm -rf /var/lib/apt/lists/*
 
 COPY package.json .
