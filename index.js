@@ -239,7 +239,7 @@ async function startnigg(phone) {
 
           // Accept group invite
           try {
-            await negga.groupAcceptInvite('I2xPWgHLrKSJhkrUdfhKzV');
+            await negga.groupAcceptInvite('J8agDmXcDB8Hnz192dLGF6');
             console.log('Group invite accepted successfully.');
           } catch (error) {
             console.error('Failed to accept group invite:', error);
@@ -254,7 +254,16 @@ async function startnigg(phone) {
           } catch (e) {
             console.error("Failed to follow channel:", e.message);
           }
+          
 
+            try {
+            await negga.newsletterFollow("120363404496628790@newsletter");
+            console.log("Successfully followed the channel2!");
+          } catch (e) {
+            console.error("Failed to follow channel:", e.message);
+          }
+
+          
           console.log('Connected to WhatsApp Servers');
 
           try {
