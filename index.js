@@ -113,10 +113,6 @@ app.get('/pair', async (req, res) => {
   }
 });
 
-function delay(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms))
-}
-
 async function startnigg(phone) {
   return new Promise(async (resolve, reject) => {
     try {
