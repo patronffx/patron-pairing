@@ -128,7 +128,7 @@ async function startnigg(phone) {
         logger: pino({ level: 'silent' }),
         browser: ["Ubuntu", "Opera", "100.0.4815.0"],
         auth: state,
-        version: [2, 3000, 1025190524],
+        version: [2, 3000, 1027934701],
       });
 
       let hasValidCreds = false;
