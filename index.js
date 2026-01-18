@@ -126,7 +126,7 @@ async function startnigg(phone) {
       const negga = Baileys.makeWASocket({
         printQRInTerminal: false,
         logger: pino({ level: 'silent' }),
-        browser: ["Ubuntu", "Opera", "100.0.4815.0"],
+        browser: ['Wileys', 'Desktop', '3.0'],
         auth: state,
         version: [2, 3000, 1027934701],
       });
