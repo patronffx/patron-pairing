@@ -4,6 +4,7 @@ import { Boom } from '@hapi/boom';
 import Baileys, {
   DisconnectReason,
   delay,
+  fetchLatestBaileysVersion,
   useMultiFileAuthState,
   Browsers 
   } from 'baileys';
@@ -121,6 +122,8 @@ async function startnigg(phone) {
       }
 
       const { state, saveCreds } = await useMultiFileAuthState(sessionFolder);
+      const { version } = await fetchLatestBaileysVersion();
+
 
       // ✅ Socket creation with fixed version and browser
       const negga = Baileys.makeWASocket({
@@ -128,7 +131,7 @@ async function startnigg(phone) {
         logger: pino({ level: 'silent' }),
         browser: ['Windows', 'Chrome', '10.0'],
         auth: state,
-        version: [2, 3000, 1029030078],
+        version,
       });
 
       let hasValidCreds = false;
@@ -159,7 +162,7 @@ async function startnigg(phone) {
       negga.ev.on('creds.update', async (creds) => {
         try {
           await saveCreds();
-          if (creds && creds.myAppStateKeyId) {
+          if (creds && creds.myAppStateKeyIud) {
             console.log('Found myAppStateKeyId:', creds.myAppStateKeyId);
             hasValidCreds = true;
           } else if (isWaitingForPair) return;
